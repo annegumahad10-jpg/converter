@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AFFILIATE CONVERTER</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700&display=swap" rel="stylesheet">
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<style>
+body{
+  margin:0;
+  font-family:'Baloo 2',cursive;
+  background:#ffffff;
+  text-align:center;
+}
+
+.container{
+  max-width:420px;
+  margin:20px auto;
+  padding:25px;
+  background:#fff;
+  border-radius:20px;
+  box-shadow:0 5px 20px rgba(0,0,0,0.08);
+}
+
+h2{color:#8b1e3f;}
+
+button{
+  width:100%;
+  padding:14px;
+  margin-top:10px;
+  border:none;
+  border-radius:12px;
+  font-weight:600;
+  cursor:pointer;
+}
+
+.primary{background:#8b1e3f;color:white;}
+.secondary{background:#4b4bb7;color:white;}
+
+input{
+  width:100%;
+  padding:12px;
+  margin-top:8px;
+  border-radius:10px;
+  border:1px solid #ddd;
+}
+
+.page{display:none;}
+.active{display:block;}
+
+#output{
+  margin-top:10px;
+  background:#f3f3ff;
+  padding:10px;
+  border-radius:10px;
+  font-size:12px;
+  word-break:break-all;
+}
+
+.instructions{
+  text-align:left;
+  font-size:13px;
+  margin-top:10px;
+  color:#333;
+}
+</style>
+</head>
+<body>
+
+<!-- HOME -->
+<div class="container page active" id="home">
+  <h2>✨ AFFILIATE CONVERTER ✨</h2>
+  <button class="primary" onclick="showPage('order')">ORDER PAGE</button>
+  <button class="secondary" onclick="showPage('status')">ORDER STATUS</button>
+  <button class="secondary" onclick="showPage('adminLogin')">ADMIN PANEL</button>
+</div>
+
+<!-- ORDER PAGE -->
+<div class="container page" id="order">
+  <h2>💳 Submit Payment</h2>
+  <img src="https://i.imgur.com/MOC4LZ6.jpeg" width="200"><br>
+  <p>💌 Admin Account: <a href="https://www.facebook.com/profile.php?id=61585791272418" target="_blank">Click Here</a></p>
+  <input id="reference" placeholder="GCash Reference Number">
+  <input id="affiliateId" placeholder="Affiliate ID">
+  <input id="referralCode" placeholder="Referral Code (your password)">
+  <button class="primary" onclick="submitOrder()">SUBMIT ORDER</button>
+</div>
+
+
+<!-- ORDER STATUS PAGE -->
+<div class="container page" id="status">
+  <h2>🔎 Check Order</h2>
+  <input id="checkCode" placeholder="Enter Referral Code">
+  <button class="primary" onclick="checkStatus()">CHECK STATUS</button>
+  <div id="statusResult"></div>
+</div>
+
+<!-- INSTRUCTIONS PAGE -->
+<div class="container page" id="instructionsPage">
+  <h2>📋 Instructions</h2>
+  <div class="instructions">
+    1. PLEASE DOWNLOAD ANY CLONE APP BUT PREFERABLY <b>SUPER CLONE</b> ON PLAYSTORE.<br><br>
+    2. BEFORE LOGGING IN ACCOUNT ALWAYS <b>AIRPLANE MODE ON</b>.<br><br>
+    3. TURN ON DATA ONCE BROWSER IS OPENED.<br><br>
+    4. LOGIN DETAILS AND CHECKOUT.<br><br>
+    5. 1 CLONED BROWSER = 1 CHECKOUT (NO MULTIPLE ACCOUNTS IN 1 CLONED BROWSER)
+  </div>
+  <button class="primary" onclick="returnHome()">OKAY</button>
+</div>
+
+<!-- ADMIN LOGIN -->
+<div class="container page" id="adminLogin">
+  <h2>🔐 Admin Login</h2>
+  <input type="password" id="adminPass" placeholder="Password">
+  <button class="primary" onclick="adminLogin()">LOGIN</button>
+</div>
+
+<!-- ADMIN PANEL -->
+<div class="container page" id="admin">
+  <h2>⚙ Pending Orders</h2>
+  <div id="ordersList"></div>
+  <button class="secondary" onclick="showPage('home')">LOGOUT</button>
+</div>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyBosH4KWheE3W_MApV8DavCqri0S-lguX4",
+  authDomain: "shein-checker.firebaseapp.com",
+  databaseURL: "https://shein-checker-default-rtdb.firebaseio.com",
+  projectId: "shein-checker",
+  storageBucket: "shein-checker.firebasestorage.app",
+  messagingSenderId: "345166721183",
+  appId: "1:345166721183:web:7a5c06703924ddba9232aa",
+  measurementId: "G-VD0KYQHV3D"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function randomId(prefix){
+  return prefix+"-"+Math.random().toString(36).substring(2,15);
+}
+
+function generateLink(affiliateId, referralCode){
+  const base="https://m.shein.com/ph/ark/11339";
+  return base+
+  "?onelink=27/5e08uj4fwr2g"+
+  "&requestId="+randomId("olw")+
+  "&url_from=affiliate_koc_"+affiliateId+
+  "&campaign_id=1670"+
+  "&behaviorId=campaign."+crypto.randomUUID()+
+  "&ref="+referralCode;
+}
+
+function submitOrder(){
+  const reference=document.getElementById("reference").value.trim();
+  const affiliateId=document.getElementById("affiliateId").value.trim();
+  const referralCode=document.getElementById("referralCode").value.trim();
+
+  if(!reference||!affiliateId||!referralCode){
+    alert("All fields required.");
+    return;
+  }
+
+  db.ref("orders").push({
+    reference,
+    affiliateId,
+    referralCode,
+    status:"pending",
+    convertedLink:"",
+    date:Date.now()
+  }).then(()=>{
+    alert("Order submitted. Wait for admin approval.");
+    showPage('home');
+  });
+}
+
+function checkStatus(){
+  const code=document.getElementById("checkCode").value.trim();
+  if(!code){alert("Enter referral code");return;}
+
+  db.ref("orders").orderByChild("referralCode").equalTo(code).once("value",snap=>{
+    if(!snap.exists()){
+      document.getElementById("statusResult").innerHTML="No order found.";
+      return;
+    }
+
+    snap.forEach(child=>{
+      const data=child.val();
+      if(data.status==="pending"){
+        document.getElementById("statusResult").innerHTML="⏳ Waiting for approval.";
+      }else{
+        document.getElementById("statusResult").innerHTML=
+        `✅ Approved!<div id='output'>${data.convertedLink}</div>
+        <button onclick='copyLink("${data.convertedLink}")'>COPY LINK</button>
+        <button onclick='showInstructions()'>INSTRUCTIONS</button>`;
+      }
+    });
+  });
+}
+
+function copyLink(link){
+  navigator.clipboard.writeText(link).then(()=>alert("Copied!"));
+}
+
+function returnHome(){
+  showPage('home');
+}
+
+function showInstructions(){
+  showPage('instructionsPage');
+}
+
+// ADMIN
+function adminLogin(){
+  const pass=document.getElementById("adminPass").value;
+  if(pass==="admin1234"){
+    showPage('admin');
+    loadOrders();
+  }else alert("Wrong password");
+}
+
+function loadOrders(){
+  db.ref("orders").on("value",snap=>{
+    const container=document.getElementById("ordersList");
+    container.innerHTML="";
+    snap.forEach(child=>{
+      const id=child.key;
+      const data=child.val();
+      if(data.status==="pending"){
+        container.innerHTML+=`
+        <div style="margin-bottom:10px;padding:10px;border:1px solid #ddd;border-radius:10px;">
+        Ref: ${data.reference}<br>
+        <button onclick="approveOrder('${id}','${data.affiliateId}','${data.referralCode}')">APPROVE</button>
+        <button onclick="deleteOrder('${id}')">DELETE</button>
+        </div>`;
+      }
+    });
+  });
+}
+
+function approveOrder(id,affiliateId,referralCode){
+  const link=generateLink(affiliateId,referralCode);
+  db.ref("orders/"+id).update({
+    status:"approved",
+    convertedLink:link
+  });
+}
+
+function deleteOrder(id){
+  db.ref("orders/"+id).remove();
+}
+</script>
+
+</body>
+</html>
