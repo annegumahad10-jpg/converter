@@ -89,8 +89,8 @@ input{
   <input id="affiliateId" placeholder="Affiliate ID">
   <input id="referralCode" placeholder="Referral Code (your password)">
   <button class="primary" onclick="submitOrder()">SUBMIT ORDER</button>
+  <button class="secondary" onclick="showPage('home')">⬅ BACK</button>
 </div>
-
 
 <!-- ORDER STATUS PAGE -->
 <div class="container page" id="status">
@@ -98,6 +98,7 @@ input{
   <input id="checkCode" placeholder="Enter Referral Code">
   <button class="primary" onclick="checkStatus()">CHECK STATUS</button>
   <div id="statusResult"></div>
+  <button class="secondary" onclick="showPage('home')">⬅ BACK</button>
 </div>
 
 <!-- INSTRUCTIONS PAGE -->
@@ -118,6 +119,7 @@ input{
   <h2>🔐 Admin Login</h2>
   <input type="password" id="adminPass" placeholder="Password">
   <button class="primary" onclick="adminLogin()">LOGIN</button>
+  <button class="secondary" onclick="showPage('home')">⬅ BACK</button>
 </div>
 
 <!-- ADMIN PANEL -->
@@ -224,7 +226,7 @@ function showInstructions(){
 // ADMIN
 function adminLogin(){
   const pass=document.getElementById("adminPass").value;
-  if(pass==="admin1234"){
+  if(pass==="soleixea123"){
     showPage('admin');
     loadOrders();
   }else alert("Wrong password");
